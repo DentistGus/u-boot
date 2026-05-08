@@ -2,9 +2,9 @@ name: "CodeQL Custom Analysis"
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
   schedule:
     - cron: '0 0 * * 1' # Gira ogni lunedì a mezzanotte
 
@@ -31,8 +31,8 @@ jobs:
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
-        # Nota: assicurati che la cartella esista e contenga il file qlpack.yml
-        queries: ./.github/codeql/custom-queries
+        # Formato -> nome-del-pack:percorso-cartella
+        packs: static-analysis/custom-queries:./.github/codeql/custom-queries
 
     # 2. Compilazione (OBBLIGATORIA per C++)
     # Se il tuo progetto usa un build system standard (cmake, make), usa autobuild:

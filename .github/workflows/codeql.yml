@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ "master" ]
   schedule:
-    - cron: '0 0 * * 1' # Gira ogni lunedì a mezzanotte
+    - cron: '0 0 * * 1'
 
 jobs:
   analyze:
@@ -15,36 +15,46 @@ jobs:
     permissions:
       actions: read
       contents: read
-      security-events: write # Necessario per caricare i risultati nei Security Alerts
+      security-events: write
 
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'c-cpp' ] # Specifichiamo C++ qui
+        language: [ 'c-cpp' ]
+        # Definiamo manual qui per far funzionare l'if dello script
+        build-mode: [ 'manual' ]
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 1. Inizializzazione (Quello che avevi nell'immagine)
+    # 1. Inizializzazione con il tuo pacchetto custom
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
-        # Nota: assicurati che la cartella esista e contenga il file qlpack.yml
+        # Puntamento al tuo pacchetto custom (assicurati che il nome nel qlpack.yml sia questo)
         queries: ./.github/codeql/custom-queries
 
-    # 2. Compilazione (OBBLIGATORIA per C++)
-    # Se il tuo progetto usa un build system standard (cmake, make), usa autobuild:
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
-    
-    # Se Autobuild fallisce, commentalo e usa i tuoi comandi:
-    # - name: Manual Build
-    #   run: |
-    #     make
+    # 2. Build Manuale (Estratto dalla tua immagine)
+    - name: Install dependencies and Build
+      if: matrix.build-mode == 'manual'
+      shell: bash
+      run: |
+        set -xe
 
-    # 3. Analisi Finale (Esegue le query e genera il report)
+        echo "::group::Install dependencies"
+        sudo apt-get update
+        sudo apt-get install -y libsdl1.2-dev bison flex
+        echo "::endgroup::"
+
+        echo "::group::Build project"
+        make clean || echo "make clean failed"
+        make defconfig || echo "make defconfig failed"
+        make all || echo "make all failed"
+        echo "::endgroup::"
+
+    # 3. Esecuzione Analisi
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:

@@ -1,5 +1,8 @@
 /**
+ * @name Input validation in memcpy
+ * @id cpp/custom/input-validation
  * @kind path-problem
+ * @tags security
  */
 
 import cpp

@@ -1,0 +1,51 @@
+name: "CodeQL Custom Analysis"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '0 0 * * 1' # Gira ogni lunedì a mezzanotte
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write # Necessario per caricare i risultati nei Security Alerts
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'c-cpp' ] # Specifichiamo C++ qui
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 1. Inizializzazione (Quello che avevi nell'immagine)
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        # Nota: assicurati che la cartella esista e contenga il file qlpack.yml
+        queries: ./.github/codeql/custom-queries
+
+    # 2. Compilazione (OBBLIGATORIA per C++)
+    # Se il tuo progetto usa un build system standard (cmake, make), usa autobuild:
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+    
+    # Se Autobuild fallisce, commentalo e usa i tuoi comandi:
+    # - name: Manual Build
+    #   run: |
+    #     make
+
+    # 3. Analisi Finale (Esegue le query e genera il report)
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"

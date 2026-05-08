@@ -5,7 +5,7 @@
 #
 # Normal rules (sorted alphabetically)
 #
-.*
+#.*
 *.a
 *.bin
 *.cfgout
